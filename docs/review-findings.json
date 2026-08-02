@@ -1,0 +1,244 @@
+{
+  "authPattern": {
+    "facts": [
+      {
+        "claim": "@supabase/ssr is the officially recommended package for Supabase Auth in Next.js App Router.",
+        "status": "confirmed",
+        "detail": "Official docs use @supabase/ssr + @supabase/supabase-js. npm registry marks @supabase/auth-helpers-nextjs (latest 0.15.0) as deprecated: \"Package no longer supported.\" Use @supabase/ssr for all new projects.",
+        "source": "https://supabase.com/docs/guides/auth/server-side/nextjs and https://registry.npmjs.org/@supabase/auth-helpers-nextjs"
+      },
+      {
+        "claim": "Recommended pattern: two clients plus middleware for session refresh.",
+        "status": "confirmed",
+        "detail": "Create lib/supabase/client.ts (createBrowserClient, Client Components) and lib/supabase/server.ts (createServerClient, created fresh per request for Server Components/Actions/Route Handlers). Middleware refreshes tokens (docs call getClaims there) and writes refreshed cookies to both request and response.",
+        "source": "https://supabase.com/docs/guides/auth/server-side/nextjs"
+      },
+      {
+        "claim": "Current stable Next.js is 16.x (16.2.12, released July 25, 2026); the pattern works with it.",
+        "status": "confirmed",
+        "detail": "Next.js 16.2.12 is Active LTS; 15.5.x is Maintenance LTS until Oct 21, 2026. Supabase docs and Vercel's official create-next-app -e with-supabase template target current App Router; @supabase/ssr works with both 15 and 16.",
+        "source": "https://endoflife.date/nextjs and https://nextjs.org/blog/july-2026-security-release and https://vercel.com/templates/next.js/supabase"
+      },
+      {
+        "claim": "Gotcha: never trust getSession() in server code; use getUser() to protect /dashboard/* routes.",
+        "status": "partially-correct",
+        "detail": "Docs still warn: \"Never trust supabase.auth.getSession() inside server code... It isn't guaranteed to revalidate the Auth token.\" But current docs now recommend getClaims() (local JWT verification via JWKS) as primary for protecting pages; getUser() remains valid but makes a network call every time.",
+        "source": "https://supabase.com/docs/guides/auth/server-side/nextjs"
+      },
+      {
+        "claim": "Gotcha: middleware alone is insufficient; cookies can be spoofed, so re-check auth near the data.",
+        "status": "confirmed",
+        "detail": "Docs: \"The server gets the user session from the cookies, which can be spoofed.\" \"Always use supabase.auth.getClaims() to protect pages and user data.\" So verify in the Server Component/Route Handler serving /dashboard/*, not only in middleware; middleware handles refresh + redirect UX.",
+        "source": "https://supabase.com/docs/guides/auth/server-side/nextjs"
+      },
+      {
+        "claim": "Gotcha: caching of server-rendered pages can leak sessions between users.",
+        "status": "confirmed",
+        "detail": "The setAll cookie callback in middleware also receives Cache-Control/Expires/Pragma headers; apply them to the response so CDNs never cache authenticated HTML. Also configure the middleware matcher to skip static assets/_next so refresh logic and cache headers only run where needed.",
+        "source": "https://supabase.com/docs/guides/auth/server-side/nextjs"
+      },
+      {
+        "claim": "Gotcha: create the server client per request; env vars use the new publishable key.",
+        "status": "confirmed",
+        "detail": "Never store createServerClient in a global — it needs each request's cookies; docs note \"Creating a Supabase client is lightweight.\" Current setup uses NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (new key format replacing the legacy anon key).",
+        "source": "https://supabase.com/docs/guides/auth/server-side/nextjs and https://vercel.com/templates/next.js/supabase"
+      }
+    ]
+  },
+  "completeness": {
+    "findings": [
+      {
+        "section": "§7.1 F-2 / §14 Q3 / §16 M5",
+        "issue": "Zero-published-projects state is undefined. Q3 seeds 3 placeholder projects as drafts, so the public site launches with an empty work grid. F-2 never says what a visitor sees when no projects are published; M5 mentions 'empty states' without defining them.",
+        "suggestion": "Specify the empty Work section: e.g., a styled 'New projects coming soon' card, hero and About still render fully, and the 'See my work' CTA behavior. Define dashboard empty state too (no projects yet → prominent 'Add your first project' button).",
+        "severity": "high"
+      },
+      {
+        "section": "§9 Data Model / §13 Step 5-6",
+        "issue": "Creation of the single `profiles` row is unspecified. The SQL script (step 5) runs before the admin user exists (step 6), and the row's PK references auth.users.id. Without it, the public hero/About render nothing and Settings has nothing to edit.",
+        "suggestion": "Add a requirement: a trigger on auth.users insert auto-creates the profile row with the default name/tagline/bio, plus a specified public fallback if the row is missing. Verify it in Acceptance Criteria.",
+        "severity": "high"
+      },
+      {
+        "section": "§7.2 Authentication",
+        "issue": "No forgot-password / account recovery flow. A non-coding single user forgetting his password is highly likely, and sign-ups are disabled. Not listed in Non-Goals. Supabase's reset email needs an in-app reset page to land on.",
+        "suggestion": "Add F-requirement: 'Forgot password' link on /login triggering Supabase reset email plus a /reset-password page. Alternatively, explicitly defer it and document the manual Supabase-dashboard reset procedure in the README.",
+        "severity": "high"
+      },
+      {
+        "section": "§7.3 F-15 / §7.4 F-22 / §9 Storage",
+        "issue": "No image constraints or upload-failure behavior: no max file size, no accepted formats for project covers (only avatar formats listed), no resize/compression, no error message for oversized/unsupported/failed uploads. Large animated GIFs threaten the 1GB free storage quota and Lighthouse >= 90 (G6).",
+        "suggestion": "Specify: accepted formats (PNG/JPG/WebP/GIF), max size (e.g., 2MB avatar, 5MB cover), client-side validation with plain-language errors, recommended dimensions, and use of next/image optimization (with Supabase remotePatterns configured).",
+        "severity": "high"
+      },
+      {
+        "section": "§7.3 F-14 / §6 US-12",
+        "issue": "Form validation rules are unspecified: which fields are required beyond title, URL format for demo/repo links, how tech-stack tags are entered (chips? comma-separated?), summary length limits, and whether a project can be Published with no image, summary, or links.",
+        "suggestion": "Add a validation table: title required (max ~80 chars), summary max ~160 chars, URLs must be valid https (auto-prefix), tags entered as comma/Enter chips, progress clamped 0-100. Define publish preconditions or explicitly allow publishing incomplete projects with placeholder rendering.",
+        "severity": "medium"
+      },
+      {
+        "section": "§6 US-14/US-20 vs §12 Rendering strategy",
+        "issue": "Contradiction: user stories promise changes appear 'immediately (next page load)' but §12 specifies 'short revalidation' caching. With e.g. 60s revalidate, Himanshu clicks Publish, checks the site, sees nothing, and assumes it's broken.",
+        "suggestion": "Pick and state one: fully dynamic public pages (revalidate 0), or ISR with on-demand revalidation triggered by the publish/save actions (revalidatePath). Update US-14/US-20 wording to match the chosen guarantee.",
+        "severity": "medium"
+      },
+      {
+        "section": "§6 US-7 / §7.2",
+        "issue": "Session expiry behavior is undefined: no session duration, no refresh-token expectation, and no spec for expiry mid-edit — a long project write-up could be silently lost on save when the session has lapsed, with only a redirect to /login.",
+        "suggestion": "Specify: cookie sessions auto-refresh via middleware (default with @supabase/ssr); on expired-session save, show a plain-language error and preserve form data (or re-authenticate in place) rather than redirecting and discarding input.",
+        "severity": "medium"
+      },
+      {
+        "section": "§9 projects.slug / §6 US-17",
+        "issue": "Slug is unique and auto-generated from title, but collision handling is unspecified — creating two projects titled 'Test' would fail with a raw DB unique-violation error. Also unspecified: whether slug regenerates on title edit, and the reorder UI mechanism (drag? arrows?) plus default sort_order for new projects.",
+        "suggestion": "Specify: append a numeric suffix on collision (test-2), slug frozen after creation, new projects get sort_order = max+1, and reorder via simple up/down arrows (drag-and-drop optional polish).",
+        "severity": "medium"
+      }
+    ]
+  },
+  "technical": {
+    "findings": [
+      {
+        "section": "§9 public_projects view + §10 S-1",
+        "issue": "View security semantics unspecified. Default Postgres 15+ views run with owner rights (bypass RLS) — Supabase's linter flags this — while the common fix, security_invoker=true, returns zero rows to anon because no anon SELECT policy exists on projects. Either way, AI-generated SQL likely breaks or gets flagged.",
+        "suggestion": "Specify exactly: RLS on projects with NO anon policy; view created without security_invoker (owner-rights), granted SELECT to anon; no anon grant on the base table; document why the Supabase linter warning is expected and acceptable.",
+        "severity": "high"
+      },
+      {
+        "section": "§12 Rendering strategy + US-14 + Acceptance #6",
+        "issue": "\"Per request, with short revalidation\" is contradictory. In Next.js 15, no-store fetches no longer force dynamic rendering — public pages with no dynamic APIs are statically prerendered at build (Full Route Cache), so a newly published project would never appear without redeploying.",
+        "suggestion": "Specify export const revalidate = 60 on / and /work, and call revalidatePath('/') and revalidatePath('/work') in the publish/profile server actions for instant updates. Note the client Router Cache may also need router.refresh() after toggling.",
+        "severity": "high"
+      },
+      {
+        "section": "§13 Steps 5–6 + §9 profiles",
+        "issue": "The SQL script (step 5) cannot seed the profiles row: profiles.id FK-references auth.users.id, but the admin user is only created in step 6. First deploy renders a landing page with no name, tagline, or bio.",
+        "suggestion": "Add a trigger on auth.users INSERT that auto-creates the profile row with sensible defaults, or reorder user creation before the script. Also make public pages tolerate a missing profile row instead of using .single() and crashing.",
+        "severity": "medium"
+      },
+      {
+        "section": "§9 Storage buckets + US-18/US-20 + Acceptance #8",
+        "issue": "Supabase Storage serves public objects through a CDN with long cache headers. Overwriting the same avatar/cover path shows the stale image after upload, breaking \"changes appear immediately\" and Acceptance Criterion 8.",
+        "suggestion": "Require unique object paths per upload (uuid or timestamp in filename), store the new URL, and delete the old object. Never upsert/overwrite an existing storage path in place.",
+        "severity": "medium"
+      },
+      {
+        "section": "§10 S-1 (profiles read)",
+        "issue": "\"Read-only on profiles public fields\" is not implementable with RLS alone — RLS is row-level, not column-level. Any anon SELECT policy on profiles exposes every column via PostgREST.",
+        "suggestion": "Either explicitly declare all profiles columns public (they currently are), or mirror the projects pattern: a public_profile view exposing chosen columns, with no anon policy or grant on the base table.",
+        "severity": "medium"
+      },
+      {
+        "section": "§10 S-1/S-5 (write policies)",
+        "issue": "Writes are gated only on \"authenticated session\", for both tables and storage buckets. Security rests entirely on sign-ups staying disabled; any future auth change (e.g., enabling an OAuth provider) silently grants full write access to strangers.",
+        "suggestion": "Scope all write policies to the admin, e.g. auth.uid() = (select id from profiles limit 1) (works with the profile-creation trigger), or a concrete UUID pasted in after step 6. Apply the same check to storage policies.",
+        "severity": "medium"
+      },
+      {
+        "section": "§9 projects table + F-16",
+        "issue": "status is free text with no CHECK/enum, progress has no 0–100 constraint, and \"sets published_at on first publish\" isn't assigned to app code or a trigger — AI-generated CRUD can silently write invalid states or reset publish dates.",
+        "suggestion": "Add CHECK (status IN ('draft','in_progress','published')), CHECK (progress BETWEEN 0 AND 100), a trigger setting published_at only when NULL on transition to published, and an updated_at auto-update trigger. Put all in supabase-setup.sql.",
+        "severity": "low"
+      },
+      {
+        "section": "§9 slug + §13 Step 7 vs §10 S-3",
+        "issue": "Slug is \"auto-generated from title\" with a unique constraint but no collision or regeneration rule — a second \"My App\" fails with a raw DB error the non-coder admin can't interpret. Separately, step 7 says \"anon key\" while S-3 mandates the publishable key.",
+        "suggestion": "Specify slug generation: slugify title, append numeric suffix on collision, immutable after creation; surface unique-violations as a friendly toast. Align step 7 wording with S-3 (\"publishable key\").",
+        "severity": "low"
+      }
+    ]
+  },
+  "beginner": {
+    "findings": [
+      {
+        "section": "§13 Setup & Deployment Plan",
+        "issue": "Missing prerequisites: the plan never mentions installing Node.js, Git, or GitHub Desktop on Windows. Step 1 generates code, Step 3 pushes it — but M1 says \"runs locally,\" which is impossible without Node. Himanshu will hit a wall immediately.",
+        "suggestion": "Add a \"Step 0 — Install the tools\" row: install Node.js LTS and GitHub Desktop, with download links and expected time. State clearly whether running locally is required at all, or if Vercel builds everything.",
+        "severity": "high"
+      },
+      {
+        "section": "§13 Step 3 (Push code to GitHub)",
+        "issue": "\"Push the code (guided commands or GitHub Desktop)\" leaves terminal git commands as an option for a non-coder. One wrong command (or committing .env.local) can cause real damage and fear. \"Push\" is also not in the glossary.",
+        "suggestion": "Make GitHub Desktop the single documented path (it is visual: click Publish repository). Remove \"guided commands\" from v1. Add \"Push\" to the glossary as \"uploading your code folder to GitHub.\"",
+        "severity": "high"
+      },
+      {
+        "section": "§13 Step 7 vs §10 S-3 vs §19 Glossary",
+        "issue": "Contradiction: S-3 says the project uses the new \"publishable key\" (sb_publishable_…), but Step 7 and the glossary say \"anon key.\" In the Supabase dashboard he will look for \"anon key,\" not find it, and get stuck.",
+        "suggestion": "Use one name everywhere: \"publishable key (older name: anon key)\". Fix Step 7 and the glossary entry to match S-3, and mention exactly where in the Supabase dashboard it appears.",
+        "severity": "high"
+      },
+      {
+        "section": "§13 Step 7 (.env.local)",
+        "issue": "Creating/editing \".env.local\" is genuinely hard on Windows for a beginner: Explorer hides file extensions, Notepad saves it as \".env.local.txt\", and dot-files look broken. The PRD assumes this step is trivial (2 min).",
+        "suggestion": "Ship a pre-made \".env.local\" file (not just .example) with placeholder text to replace, and note it may be skippable entirely if he only deploys via Vercel (Step 8 already adds the same two variables there).",
+        "severity": "medium"
+      },
+      {
+        "section": "§9–§12 (Data Model, Security, Architecture)",
+        "issue": "Four dense technical sections (uuid, jsonb, RLS policies, SSR, middleware) sit in the middle of the document with no signal that they are written for the AI, not for him. A beginner may stop reading here and feel the project is beyond him.",
+        "suggestion": "Add a one-line note at the top of §9: \"Sections 9–12 are technical instructions for the AI builder. You can safely skip to Section 13.\" Also add a pointer to the glossary in §1.",
+        "severity": "medium"
+      },
+      {
+        "section": "§3, §7, §8, §11 (jargon gaps)",
+        "issue": "Several terms are used but never defined anywhere, including the glossary: \"slug\" (§8, §9), \"Lighthouse scores ≥ 90\" (G6), \"Open Graph tags\" (F-7), \"glassmorphism\" (§11), \"SQL script\" (Step 5), \"mailto: link\" (F-4).",
+        "suggestion": "Add these six terms to the §19 glossary in plain language, e.g. \"Lighthouse — Google's free report card that scores how fast and accessible a website is (out of 100).\"",
+        "severity": "medium"
+      },
+      {
+        "section": "§13 time estimates",
+        "issue": "Estimates (10 min to push code, ~45 min total) are realistic for a developer, not a first-timer. When Step 3 takes him two hours, he may conclude he is failing, when the estimate was simply wrong.",
+        "suggestion": "Add a reassuring note: \"These times assume everything goes smoothly. First time, expect 2–3x longer — that is completely normal. You can stop after any step and continue later.\"",
+        "severity": "medium"
+      },
+      {
+        "section": "§11 Vibe / §19 Middleware entry",
+        "issue": "Idiomatic English may not land for a non-native speaker: \"Apple's website had a baby with a developer's terminal\" (§11) and \"the bouncer checking login\" (§19) — \"bouncer\" itself is slang needing explanation.",
+        "suggestion": "Keep the fun phrases but add a literal line after each, e.g. \"(meaning: premium and minimal, with a dark techy feel)\" and \"(a security guard at a club door who checks who may enter).\"",
+        "severity": "low"
+      }
+    ]
+  },
+  "scope": {
+    "findings": [
+      {
+        "section": "§16 Milestones / §13 Setup Plan",
+        "issue": "The riskiest step — a non-coder creating accounts and deploying — is deferred to M6, the very last milestone. M1's definition of done is 'runs locally,' but Himanshu can't run code locally, so he cannot verify any milestone until the end.",
+        "suggestion": "Move steps 2–8 (GitHub, Supabase, Vercel) to right after M1. Deploy the skeleton immediately. Every later milestone then auto-deploys and is verifiable at a live URL, and setup friction surfaces in week one, not launch day.",
+        "severity": "high"
+      },
+      {
+        "section": "§17 Risks — Supabase pausing",
+        "issue": "The core value prop is 'a recruiter can visit anytime.' Supabase Free pauses after ~1 week idle, breaking the public site exactly when an unexpected visitor arrives. 'Himanshu visits weekly' is not a real mitigation.",
+        "suggestion": "Ship a scheduled GitHub Actions keep-alive ping (repo already exists, zero new accounts) in v1, plus a long ISR revalidate so cached public pages still render if the DB is down. Both are ~30 minutes of AI-generated code.",
+        "severity": "high"
+      },
+      {
+        "section": "§13 Setup Plan, steps 3 and 7",
+        "issue": "Step 7 (paste keys into .env.local) is pointless friction — Himanshu never runs the app locally; only Vercel env vars (step 8) matter. Step 3 assumes installing Git/GitHub Desktop, the most failure-prone tooling step for a beginner.",
+        "suggestion": "Delete step 7 for the owner (keep .env.local.example for AI/dev use). For step 3, document GitHub's web 'upload files' drag-and-drop as the primary path — no Git install needed for a one-time push.",
+        "severity": "medium"
+      },
+      {
+        "section": "§18 Acceptance Criteria",
+        "issue": "Criteria 4 ('creating a new account is impossible') and 10 ('$0/month') aren't testable by a non-coder as written — there's no sign-up UI to attempt, and cost isn't observable on day one. Lighthouse ≥ 90 (G6/M5) also has no stated test method.",
+        "suggestion": "Add a 'how to verify' line per criterion: #4 = check Supabase Auth settings shows sign-ups disabled; #10 = billing pages show Free/Hobby plan; Lighthouse = paste URL into PageSpeed Insights and read the score.",
+        "severity": "medium"
+      },
+      {
+        "section": "§6 US-17 / §7.3 (v1 scope cut)",
+        "issue": "Manual reordering (sort_order UI, likely drag-and-drop) is disproportionate dashboard complexity for a site launching with roughly 3 projects. It inflates M3, the largest milestone.",
+        "suggestion": "Keep the featured toggle; order by featured then published_at. Move the reorder UI to v2. Keep the sort_order column in the schema so no migration is needed later.",
+        "severity": "medium"
+      },
+      {
+        "section": "§15 Future Ideas (v2 → v1)",
+        "issue": "Vercel Analytics is listed in v2 but costs almost nothing: one toggle in the Vercel dashboard plus a one-line component. It also gives Himanshu a reason to check his site regularly — which incidentally helps the Supabase-pause problem.",
+        "suggestion": "Pull Vercel Analytics into v1: add the component in M5 and one checkbox line in the README setup steps. Skip building any custom analytics UI — Vercel's dashboard is the UI.",
+        "severity": "low"
+      }
+    ]
+  }
+}

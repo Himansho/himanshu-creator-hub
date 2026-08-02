@@ -1,0 +1,28 @@
+# ────────────────────────────────────────────────────────────────
+# Keep-alive robot (PRD §17)
+#
+# Supabase pauses free projects after ~1 week of low activity.
+# This GitHub Action visits your site twice a day, which touches the
+# database and keeps it awake. Free, automatic, set-and-forget.
+#
+# ⚠ ONE-TIME EDIT NEEDED: after your site is live, replace the
+#   placeholder below with your real Vercel URL (README step 8).
+# ────────────────────────────────────────────────────────────────
+name: Keep Supabase awake
+
+on:
+  schedule:
+    - cron: "23 6,18 * * *" # twice a day (times are UTC)
+  workflow_dispatch: {} # also lets you run it manually from the Actions tab
+
+env:
+  SITE_URL: https://YOUR-SITE-URL.vercel.app
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the site (touches the database)
+        run: |
+          echo "Pinging $SITE_URL/api/ping"
+          curl -fsS --max-time 30 "$SITE_URL/api/ping"
