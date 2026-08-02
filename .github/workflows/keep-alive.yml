@@ -16,7 +16,7 @@ on:
   workflow_dispatch: {} # also lets you run it manually from the Actions tab
 
 env:
-  SITE_URL: https://YOUR-SITE-URL.vercel.app
+  SITE_URL: https://himanshu-creator-hub.vercel.app
 
 jobs:
   ping:
