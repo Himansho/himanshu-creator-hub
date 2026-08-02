@@ -14,7 +14,8 @@ function friendlyAuthError(message: string): string {
   if (message.toLowerCase().includes("rate limit")) {
     return "Too many attempts — please wait a minute and try again.";
   }
-  return "Something went wrong while signing in. Please try again.";
+  // Show the real reason so problems are easy to diagnose.
+  return `Sign-in problem: ${message}`;
 }
 
 export default function LoginPage() {
