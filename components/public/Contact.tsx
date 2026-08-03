@@ -3,29 +3,30 @@ import type { Profile } from "@/lib/types";
 import Reveal from "./Reveal";
 import { SocialIcon } from "./SocialIcons";
 
+/** Jack-style contact: giant gradient heading + gradient pill. */
 export default function Contact({ profile }: { profile: Profile }) {
   const socials = SOCIAL_KEYS.filter((key) => profile.social_links[key]);
 
   return (
-    <section id="contact" className="scroll-mt-24 border-t border-edge">
-      <div className="mx-auto max-w-6xl px-5 py-24 text-center">
+    <section id="contact" className="scroll-mt-24">
+      <div className="mx-auto max-w-6xl px-5 py-24 text-center md:py-32">
         <Reveal>
-          <p className="text-sm font-medium uppercase tracking-widest text-accent">
+          <h2
+            className="hero-heading font-black uppercase leading-none tracking-tight"
+            style={{ fontSize: "clamp(3rem, 12vw, 160px)" }}
+          >
             Contact
-          </p>
-          <h2 className="mt-2 text-3xl font-bold text-ink md:text-4xl">
-            Let's build something
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-muted">
+          <p className="mx-auto mt-6 max-w-md font-light uppercase tracking-wide text-[#D7E2EA]/70">
             Have an idea, a role, or just want to say hi? My inbox is open.
           </p>
         </Reveal>
         <Reveal delay={120}>
           <a
             href={`mailto:${profile.display_email}`}
-            className="mt-9 inline-block rounded-full bg-accent px-8 py-3.5 text-sm font-semibold text-[#14100a] transition-transform hover:scale-[1.03]"
+            className="contact-btn mt-10 inline-block rounded-full px-8 py-3 text-xs font-medium uppercase tracking-widest text-white sm:px-10 sm:py-3.5 sm:text-sm md:px-12 md:py-4 md:text-base"
           >
-            {profile.display_email}
+            Contact Me
           </a>
         </Reveal>
         {socials.length > 0 && (
@@ -39,7 +40,7 @@ export default function Contact({ profile }: { profile: Profile }) {
                     rel="noopener noreferrer"
                     aria-label={SOCIAL_LABELS[key]}
                     title={SOCIAL_LABELS[key]}
-                    className="flex h-11 w-11 items-center justify-center rounded-full border border-edge text-muted transition-colors hover:border-accent/50 hover:text-accent"
+                    className="flex h-11 w-11 items-center justify-center rounded-full border border-[#D7E2EA]/25 text-[#D7E2EA]/70 transition-colors hover:border-[#D7E2EA]/60 hover:text-[#D7E2EA]"
                   >
                     <SocialIcon name={key} />
                   </a>
