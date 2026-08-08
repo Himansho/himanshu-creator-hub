@@ -67,8 +67,18 @@ export default function ProjectCard({ project }: { project: PublicProject }) {
             )}
           </ul>
         )}
-        {(project.demo_url || project.repo_url) && (
-          <div className="mt-auto flex gap-4 pt-2 text-sm font-medium">
+        {(project.demo_url || project.repo_url || project.video_url) && (
+          <div className="mt-auto flex flex-wrap gap-4 pt-2 text-sm font-medium">
+            {project.video_url && (
+              <a
+                href={project.video_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent transition-opacity hover:opacity-80"
+              >
+                ▶ Watch Video ↗
+              </a>
+            )}
             {project.demo_url && (
               <a
                 href={project.demo_url}

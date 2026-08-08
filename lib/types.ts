@@ -20,6 +20,7 @@ export interface Project {
   tech_stack: string[];
   status: ProjectStatus;
   cover_image_url: string | null;
+  video_url: string | null;
   demo_url: string | null;
   repo_url: string | null;
   private_notes: string | null;
@@ -40,6 +41,7 @@ export interface PublicProject {
   description: string | null;
   tech_stack: string[];
   cover_image_url: string | null;
+  video_url: string | null;
   demo_url: string | null;
   repo_url: string | null;
   featured: boolean;
@@ -54,6 +56,7 @@ export interface ProjectInput {
   tech_stack: string[];
   status: ProjectStatus;
   cover_image_url: string | null;
+  video_url: string;
   demo_url: string;
   repo_url: string;
   private_notes: string;

@@ -68,6 +68,7 @@ function sanitizeProject(input: ProjectInput) {
     tech_stack: cleanTags(input.tech_stack),
     status: input.status,
     cover_image_url: input.cover_image_url || null,
+    video_url: normalizeUrl(input.video_url) || null,
     demo_url: normalizeUrl(input.demo_url) || null,
     repo_url: normalizeUrl(input.repo_url) || null,
     private_notes: input.private_notes.trim() || null,

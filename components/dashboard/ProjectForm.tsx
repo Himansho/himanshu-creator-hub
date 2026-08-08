@@ -30,6 +30,7 @@ export default function ProjectForm({ initial }: { initial?: Project }) {
   const [coverUrl, setCoverUrl] = useState<string | null>(
     initial?.cover_image_url ?? null
   );
+  const [videoUrl, setVideoUrl] = useState(initial?.video_url ?? "");
   const [demoUrl, setDemoUrl] = useState(initial?.demo_url ?? "");
   const [repoUrl, setRepoUrl] = useState(initial?.repo_url ?? "");
   const [notes, setNotes] = useState(initial?.private_notes ?? "");
@@ -56,6 +57,7 @@ export default function ProjectForm({ initial }: { initial?: Project }) {
       tech_stack: tags,
       status,
       cover_image_url: coverUrl,
+      video_url: normalizeUrl(videoUrl),
       demo_url: normalizeUrl(demoUrl),
       repo_url: normalizeUrl(repoUrl),
       private_notes: notes,
@@ -234,6 +236,23 @@ export default function ProjectForm({ initial }: { initial?: Project }) {
             placeholder="github.com/you/project"
           />
         </div>
+      </div>
+
+      {/* Video */}
+      <div>
+        <label htmlFor="video" className="mb-1.5 block text-sm text-muted">
+          Video link{" "}
+          <span className="text-faint">
+            (optional — YouTube, Instagram, Drive, etc.)
+          </span>
+        </label>
+        <input
+          id="video"
+          value={videoUrl}
+          onChange={(event) => setVideoUrl(event.target.value)}
+          className={inputClass}
+          placeholder="youtube.com/watch?v=… or instagram.com/reel/…"
+        />
       </div>
 
       {/* Status + featured + progress */}

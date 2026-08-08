@@ -75,6 +75,7 @@ export function imageFileError(
 export function projectInputError(input: {
   title: string;
   summary: string;
+  video_url?: string;
   demo_url: string;
   repo_url: string;
 }): string | null {
@@ -84,6 +85,9 @@ export function projectInputError(input: {
   }
   if (input.summary.length > LIMITS.summaryMax) {
     return `The summary is too long — please keep it under ${LIMITS.summaryMax} characters.`;
+  }
+  if (input.video_url && !isValidUrl(input.video_url)) {
+    return "The video link doesn't look like a valid web address.";
   }
   if (!isValidUrl(input.demo_url)) {
     return "The live demo link doesn't look like a valid web address.";

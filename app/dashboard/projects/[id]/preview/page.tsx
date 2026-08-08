@@ -32,6 +32,7 @@ export default async function PreviewProjectPage({
     description: project.description,
     tech_stack: project.tech_stack,
     cover_image_url: project.cover_image_url,
+    video_url: project.video_url,
     demo_url: project.demo_url,
     repo_url: project.repo_url,
     featured: project.featured,
